@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظومة تسجيل بيانات العاملين</title>
+    <title>منظومة القوى البشرية</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -12,8 +12,8 @@
 <div class="container py-4">
     <div class="card shadow border-0">
         <div class="card-header bg-primary text-white text-center py-3">
-            <h3 class="mb-0">تسجيل بيانات القوى البشرية للمراكز</h3>
-            <div id="displayLocation" class="badge bg-light text-primary mt-2"></div>
+            <h3 class="mb-0">تسجيل بيانات القوى البشرية</h3>
+            <div id="displayLocation" class="badge bg-light text-primary mt-2 p-2"></div>
         </div>
         <div class="card-body p-4">
 
@@ -26,40 +26,27 @@
                     <label class="form-label fw-bold">المركز</label>
                     <select id="centreSelect" class="form-select"></select>
                 </div>
-                <button class="btn btn-primary w-100 py-2 fw-bold" onclick="validateStep1()">دخول إلى نموذج البيانات</button>
+                <button class="btn btn-primary w-100 py-2 fw-bold" onclick="validateStep1()">التالي</button>
             </div>
 
             <div id="step2" class="step">
                 <form id="mainForm">
-                    <div class="employee-group border rounded p-3 mb-4" data-role="مدير طبي">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="mb-0 text-primary">المدير الطبي <span class="text-danger">*</span></h5>
-                        </div>
+                    
+                    <div class="employee-group border-primary border rounded p-3 mb-4" data-role="مدير طبي">
+                        <h5 class="text-primary">المدير الطبي <span class="text-danger">*</span></h5>
                         <small class="text-danger d-block mb-2">في حالة عدم وجود مدير طبي برجاء ادخال بيانات مدير العيادة</small>
                         <div class="row g-3">
-                            <div class="col-md-4">
-                                <input type="text" class="form-control emp-name" placeholder="الاسم الرباعي (أحرف فقط)" required>
-                            </div>
-                            <div class="col-md-4">
-                                <input type="text" class="form-control emp-id" placeholder="الرقم القومي (14 رقم)" maxlength="14" required>
-                            </div>
-                            <div class="col-md-4">
-                                <input type="text" class="form-control emp-phone" placeholder="رقم التليفون" required>
-                            </div>
+                            <div class="col-md-4"><input type="text" class="form-control emp-name" placeholder="الاسم الرباعي" required></div>
+                            <div class="col-md-4"><input type="text" class="form-control emp-id" placeholder="الرقم القومي (14 رقم)" maxlength="14" required></div>
+                            <div class="col-md-4"><input type="text" class="form-control emp-phone" placeholder="رقم التليفون" required></div>
                         </div>
                     </div>
+
+                    <div id="doctorContainer"></div>
+                    <button type="button" class="btn btn-outline-info btn-sm mb-4" onclick="addDoctorRow()">+ إضافة طبيب - مراجع فني</button>
 
                     <div class="employee-group border rounded p-3 mb-4" data-role="مدير إداري">
                         <h5 class="text-secondary">المدير الإداري</h5>
-                        <div class="row g-3">
-                            <div class="col-md-4"><input type="text" class="form-control emp-name" placeholder="الاسم"></div>
-                            <div class="col-md-4"><input type="text" class="form-control emp-id" placeholder="الرقم القومي" maxlength="14"></div>
-                            <div class="col-md-4"><input type="text" class="form-control emp-phone" placeholder="رقم التليفون"></div>
-                        </div>
-                    </div>
-
-                    <div class="employee-group border rounded p-3 mb-4" data-role="طبيب مراجع فني">
-                        <h5 class="text-secondary">طبيب - مراجع فني</h5>
                         <div class="row g-3">
                             <div class="col-md-4"><input type="text" class="form-control emp-name" placeholder="الاسم"></div>
                             <div class="col-md-4"><input type="text" class="form-control emp-id" placeholder="الرقم القومي" maxlength="14"></div>
@@ -76,17 +63,7 @@
                         </div>
                     </div>
 
-                    <div id="dataEntryContainer">
-                        <div class="employee-group border rounded p-3 mb-4" data-role="مدخل بيانات">
-                            <h5 class="text-primary">مدخل بيانات (1) <span class="text-danger">*</span></h5>
-                            <small class="text-danger d-block mb-2">له اسم مستخدم على المنظومة</small>
-                            <div class="row g-3">
-                                <div class="col-md-4"><input type="text" class="form-control emp-name" placeholder="الاسم الرباعي" required></div>
-                                <div class="col-md-4"><input type="text" class="form-control emp-id" placeholder="الرقم القومي" maxlength="14" required></div>
-                                <div class="col-md-4"><input type="text" class="form-control emp-phone" placeholder="رقم التليفون" required></div>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="dataEntryContainer"></div>
                     <button type="button" class="btn btn-outline-success btn-sm mb-4" onclick="addDataEntryRow()">+ إضافة مدخل بيانات إضافي</button>
                 </form>
 
@@ -101,7 +78,7 @@
                 <div id="reviewTable" class="table-responsive"></div>
                 <div class="d-flex justify-content-between mt-4">
                     <button class="btn btn-secondary px-4" onclick="changeStep(2)">تعديل</button>
-                    <button id="submitBtn" class="btn btn-success px-5 fw-bold" onclick="finalSubmit()">إرسال وتحديث قاعدة البيانات</button>
+                    <button id="submitBtn" class="btn btn-success px-5 fw-bold" onclick="finalSubmit()">تأكيد وإرسال</button>
                 </div>
             </div>
 
