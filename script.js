@@ -1,24 +1,15 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVXzkdzcceWX_w2TvZS8-FQ9j19Gi_i5SHk0k4hdJOzHhdjBaDozRsnCq8CQjhconDww/exec';
+const SCRIPT_URL = 'رابط_الـ_WEB_APP_هنا';
 let sourceData = [];
-let isUpdate = false;
 
-// 1. تحميل البيانات الأولية (الفروع والمراكز)
+// تحميل الفروع
 window.onload = async () => {
-    try {
-        const resp = await fetch(`${SCRIPT_URL}?action=get_source`);
-        sourceData = await resp.json();
-        populateBranches();
-    } catch (e) {
-        alert("خطأ في الاتصال بالسيرفر");
-    }
-};
-
-function populateBranches() {
+    const resp = await fetch(`${SCRIPT_URL}?action=get_source`);
+    sourceData = await resp.json();
     const branches = [...new Set(sourceData.map(d => d.branch))];
     const bSelect = document.getElementById('branchSelect');
     bSelect.innerHTML = '<option value="">اختر الفرع...</option>';
     branches.forEach(b => bSelect.innerHTML += `<option value="${b}">${b}</option>`);
-}
+};
 
 function updateCentres() {
     const branch = document.getElementById('branchSelect').value;
@@ -29,52 +20,90 @@ function updateCentres() {
     });
 }
 
-// 2. التحقق من الخطوة الأولى
 async function validateStep1() {
-    const branch = document.getElementById('branchSelect').value;
     const centre = document.getElementById('centreSelect').value;
-    
-    if (!branch || !centre) {
-        alert("من فضلك اختر الفرع والمركز أولاً");
-        return;
-    }
+    const branch = document.getElementById('branchSelect').value;
+    if(!centre) return alert("اختر المركز");
 
-    const resp = await fetch(`${SCRIPT_URL}?action=check_centre&centre=${centre}`);
+    document.getElementById('displayLocation').innerText = `${branch} - ${centre}`;
+
+    // التحقق من وجود بيانات سابقة وملئها
+    const resp = await fetch(`${SCRIPT_URL}?action=get_centre_details&centre=${centre}`);
     const result = await resp.json();
-    
+
     if (result.exists) {
-        if (confirm(`تم إدخال بيانات "${centre}" مسبقاً. هل تود التعديل؟`)) {
-            isUpdate = true;
-        } else { return; }
+        if (confirm('بيانات هذا المركز مسجلة بالفعل، هل تود تحميلها لتعديلها؟')) {
+            fillFormWithData(result.employees);
+        }
     }
-    
-    document.getElementById('displayInfo').innerText = `الفرع: ${branch} | المركز: ${centre}`;
     changeStep(2);
 }
 
-// 3. إضافة حقول مدخل بيانات ديناميكياً
-function addDataEntryRow() {
+function fillFormWithData(employees) {
+    // تفريغ مدخلي البيانات الإضافيين أولاً
+    document.getElementById('dataEntryContainer').innerHTML = '';
+    
+    employees.forEach(emp => {
+        let group;
+        if (emp.role === 'مدخل بيانات') {
+            addDataEntryRow(emp);
+        } else {
+            group = document.querySelector(`.employee-group[data-role="${emp.role}"]`);
+            if (group) {
+                group.querySelector('.emp-name').value = emp.name;
+                group.querySelector('.emp-id').value = emp.nationalID;
+                group.querySelector('.emp-phone').value = emp.phone;
+            }
+        }
+    });
+}
+
+function addDataEntryRow(data = null) {
     const container = document.getElementById('dataEntryContainer');
+    const index = container.children.length + 1;
     const div = document.createElement('div');
-    div.className = 'employee-group mb-3 position-relative';
+    div.className = 'employee-group border rounded p-3 mb-4';
     div.setAttribute('data-role', 'مدخل بيانات');
     div.innerHTML = `
-        <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" onclick="this.parentElement.remove()">×</button>
-        <h6>مدخل بيانات إضافي</h6>
-        <div class="row g-2">
-            <div class="col-md-4"><input type="text" class="form-control emp-name" placeholder="الاسم الرباعي" required></div>
-            <div class="col-md-4"><input type="number" class="form-control emp-id" placeholder="الرقم القومي" required></div>
-            <div class="col-md-4"><input type="number" class="form-control emp-phone" placeholder="رقم التليفون" required></div>
+        <div class="d-flex justify-content-between">
+            <h5 class="text-primary">مدخل بيانات (${index})</h5>
+            ${index > 1 ? `<button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()">حذف</button>` : ''}
+        </div>
+        <small class="text-danger d-block mb-2">له اسم مستخدم على المنظومة</small>
+        <div class="row g-3">
+            <div class="col-md-4"><input type="text" class="form-control emp-name" value="${data?data.name:''}" placeholder="الاسم الرباعي" required></div>
+            <div class="col-md-4"><input type="text" class="form-control emp-id" value="${data?data.nationalID:''}" placeholder="الرقم القومي" maxlength="14" required></div>
+            <div class="col-md-4"><input type="text" class="form-control emp-phone" value="${data?data.phone:''}" placeholder="رقم التليفون" required></div>
         </div>`;
     container.appendChild(div);
 }
 
-// 4. المراجعة والإرسال
-function showReview() {
+function validateAndReview() {
     const emps = getEmployeeData();
-    let html = `<table class="table table-striped">
-                <thead><tr><th>الوظيفة</th><th>الاسم</th><th>الرقم القومي</th></tr></thead><tbody>`;
+    let errors = [];
+
     emps.forEach(e => {
+        // التحقق من الحقول الإجبارية (المدير الطبي وأول مدخل بيانات)
+        if ((e.role === 'مدير طبي' || e.isFirstDataEntry) && (!e.name || !e.nationalID || !e.phone)) {
+            errors.push(`بيانات ${e.role} إجبارية بالكامل.`);
+        }
+
+        // إذا تم إدخال أي بيانات في حقل اختياري، يجب إكمال الصف
+        if (e.name || e.nationalID || e.phone) {
+            if (!/^[a-zA-Z\u0600-\u06FF\s]+$/.test(e.name)) errors.push(`الاسم في وظيفة ${e.role} يجب أن يكون حروفاً فقط.`);
+            if (!/^\d{14}$/.test(e.nationalID)) errors.push(`الرقم القومي في وظيفة ${e.role} يجب أن يكون 14 رقماً.`);
+            if (!/^\d+$/.test(e.phone)) errors.push(`رقم التليفون في وظيفة ${e.role} يجب أن يكون أرقاماً فقط.`);
+        }
+    });
+
+    if (errors.length > 0) {
+        alert(errors.join("\n"));
+        return;
+    }
+
+    // عرض المراجعة
+    let html = '<table class="table table-bordered bg-white"><thead><tr class="table-dark"><th>الوظيفة</th><th>الاسم</th><th>الرقم القومي</th></tr></thead><tbody>';
+    emps.filter(e => e.name).forEach(e => {
         html += `<tr><td>${e.role}</td><td>${e.name}</td><td>${e.nationalID}</td></tr>`;
     });
     html += '</tbody></table>';
@@ -85,12 +114,13 @@ function showReview() {
 function getEmployeeData() {
     const groups = document.querySelectorAll('.employee-group');
     let data = [];
-    groups.forEach(g => {
+    groups.forEach((g, index) => {
         data.push({
             role: g.getAttribute('data-role'),
-            name: g.querySelector('.emp-name').value,
-            nationalID: g.querySelector('.emp-id').value,
-            phone: g.querySelector('.emp-phone') ? g.querySelector('.emp-phone').value : '-'
+            name: g.querySelector('.emp-name').value.trim(),
+            nationalID: g.querySelector('.emp-id').value.trim(),
+            phone: g.querySelector('.emp-phone').value.trim(),
+            isFirstDataEntry: (g.getAttribute('data-role') === 'مدخل بيانات' && index === 4) // فهرس أول مدخل بيانات في النموذج
         });
     });
     return data;
@@ -98,25 +128,18 @@ function getEmployeeData() {
 
 async function finalSubmit() {
     const btn = document.getElementById('submitBtn');
-    btn.disabled = true;
-    btn.innerText = 'جاري الحفظ...';
+    btn.disabled = true; btn.innerText = 'جاري الحفظ والتحديث...';
 
     const payload = {
-        action: isUpdate ? 'update' : 'submit',
         branch: document.getElementById('branchSelect').value,
         centre: document.getElementById('centreSelect').value,
-        employees: getEmployeeData()
+        employees: getEmployeeData().filter(e => e.name !== "")
     };
 
-    try {
-        const resp = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-        const res = await resp.json();
-        alert(res.message);
-        if (res.status === 'success') location.reload();
-    } catch (e) {
-        alert("حدث خطأ أثناء الإرسال");
-        btn.disabled = false;
-    }
+    const resp = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const result = await resp.json();
+    alert(result.message);
+    if(result.status === 'success') location.reload();
 }
 
 function changeStep(n) {
