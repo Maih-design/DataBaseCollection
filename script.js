@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'رابط_الـ_WEB_APP_هنا';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoVHFK7NG0jl7fzDc81EkkQv5KDb8iXjuw0MSIYv3TVpVxEr4dOu78cq_0I4eHWgXNlQ/exec';
 let sourceData = [];
 
 // تحميل الفروع
