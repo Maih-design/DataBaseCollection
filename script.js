@@ -1,14 +1,16 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoVHFK7NG0jl7fzDc81EkkQv5KDb8iXjuw0MSIYv3TVpVxEr4dOu78cq_0I4eHWgXNlQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZjzs0GpWKX8GGjX-eapfSS-56GzYAy86Y_KmnA8KAlI3MqtBVzceb3eFCqGfRf7nqrQ/exec';
 let sourceData = [];
 
-// تحميل الفروع
+// تحميل البيانات عند البدء
 window.onload = async () => {
-    const resp = await fetch(`${SCRIPT_URL}?action=get_source`);
-    sourceData = await resp.json();
-    const branches = [...new Set(sourceData.map(d => d.branch))];
-    const bSelect = document.getElementById('branchSelect');
-    bSelect.innerHTML = '<option value="">اختر الفرع...</option>';
-    branches.forEach(b => bSelect.innerHTML += `<option value="${b}">${b}</option>`);
+    try {
+        const resp = await fetch(`${SCRIPT_URL}?action=get_source`);
+        sourceData = await resp.json();
+        const branches = [...new Set(sourceData.map(d => d.branch))];
+        const bSelect = document.getElementById('branchSelect');
+        bSelect.innerHTML = '<option value="">اختر الفرع...</option>';
+        branches.forEach(b => bSelect.innerHTML += `<option value="${b}">${b}</option>`);
+    } catch (e) { alert("خطأ في الاتصال بالسيرفر"); }
 };
 
 function updateCentres() {
@@ -20,35 +22,38 @@ function updateCentres() {
     });
 }
 
+// التحقق من المركز وجلب البيانات السابقة
 async function validateStep1() {
     const centre = document.getElementById('centreSelect').value;
     const branch = document.getElementById('branchSelect').value;
-    if(!centre) return alert("اختر المركز");
+    if(!centre) return alert("الرجاء اختيار المركز");
 
-    document.getElementById('displayLocation').innerText = `${branch} - ${centre}`;
+    document.getElementById('displayLocation').innerText = `${branch} | ${centre}`;
 
-    // التحقق من وجود بيانات سابقة وملئها
-    const resp = await fetch(`${SCRIPT_URL}?action=get_centre_details&centre=${centre}`);
+    const resp = await fetch(`${SCRIPT_URL}?action=get_centre_details&centre=${encodeURIComponent(centre)}`);
     const result = await resp.json();
 
+    // مسح الحقول الديناميكية قبل التعبئة
+    document.getElementById('doctorContainer').innerHTML = '';
+    document.getElementById('dataEntryContainer').innerHTML = '';
+
     if (result.exists) {
-        if (confirm('بيانات هذا المركز مسجلة بالفعل، هل تود تحميلها لتعديلها؟')) {
+        if (confirm('بيانات المركز مسجلة مسبقاً. هل تود تحميلها لتعديلها؟')) {
             fillFormWithData(result.employees);
-        }
-    }
+        } else { addDataEntryRow(); }
+    } else { addDataEntryRow(); }
+    
     changeStep(2);
 }
 
 function fillFormWithData(employees) {
-    // تفريغ مدخلي البيانات الإضافيين أولاً
-    document.getElementById('dataEntryContainer').innerHTML = '';
-    
     employees.forEach(emp => {
-        let group;
         if (emp.role === 'مدخل بيانات') {
             addDataEntryRow(emp);
+        } else if (emp.role === 'طبيب مراجع فني') {
+            addDoctorRow(emp);
         } else {
-            group = document.querySelector(`.employee-group[data-role="${emp.role}"]`);
+            const group = document.querySelector(`.employee-group[data-role="${emp.role}"]`);
             if (group) {
                 group.querySelector('.emp-name').value = emp.name;
                 group.querySelector('.emp-id').value = emp.nationalID;
@@ -56,53 +61,75 @@ function fillFormWithData(employees) {
             }
         }
     });
+    // ضمان وجود مدخل بيانات واحد على الأقل إذا كانت البيانات القديمة لا تحتوي عليه
+    if (document.getElementById('dataEntryContainer').children.length === 0) addDataEntryRow();
 }
 
-function addDataEntryRow(data = null) {
-    const container = document.getElementById('dataEntryContainer');
-    const index = container.children.length + 1;
+// وظيفة إضافة طبيب (ديناميكي)
+function addDoctorRow(data = null) {
+    const container = document.getElementById('doctorContainer');
     const div = document.createElement('div');
-    div.className = 'employee-group border rounded p-3 mb-4';
-    div.setAttribute('data-role', 'مدخل بيانات');
+    div.className = 'employee-group border rounded p-3 mb-4 border-info';
+    div.setAttribute('data-role', 'طبيب مراجع فني');
     div.innerHTML = `
         <div class="d-flex justify-content-between">
-            <h5 class="text-primary">مدخل بيانات (${index})</h5>
-            ${index > 1 ? `<button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()">حذف</button>` : ''}
+            <h5 class="text-info">طبيب - مراجع فني</h5>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.parentElement.remove()">حذف</button>
         </div>
-        <small class="text-danger d-block mb-2">له اسم مستخدم على المنظومة</small>
-        <div class="row g-3">
-            <div class="col-md-4"><input type="text" class="form-control emp-name" value="${data?data.name:''}" placeholder="الاسم الرباعي" required></div>
-            <div class="col-md-4"><input type="text" class="form-control emp-id" value="${data?data.nationalID:''}" placeholder="الرقم القومي" maxlength="14" required></div>
-            <div class="col-md-4"><input type="text" class="form-control emp-phone" value="${data?data.phone:''}" placeholder="رقم التليفون" required></div>
+        <div class="row g-3 mt-1">
+            <div class="col-md-4"><input type="text" class="form-control emp-name" value="${data?data.name:''}" placeholder="الاسم الرباعي"></div>
+            <div class="col-md-4"><input type="text" class="form-control emp-id" value="${data?data.nationalID:''}" placeholder="الرقم القومي" maxlength="14"></div>
+            <div class="col-md-4"><input type="text" class="form-control emp-phone" value="${data?data.phone:''}" placeholder="رقم التليفون"></div>
         </div>`;
     container.appendChild(div);
 }
 
+// وظيفة إضافة مدخل بيانات (ديناميكي)
+function addDataEntryRow(data = null) {
+    const container = document.getElementById('dataEntryContainer');
+    const index = container.children.length + 1;
+    const div = document.createElement('div');
+    div.className = 'employee-group border rounded p-3 mb-4 border-success';
+    div.setAttribute('data-role', 'مدخل بيانات');
+    div.innerHTML = `
+        <div class="d-flex justify-content-between">
+            <h5 class="text-success">مدخل بيانات (${index}) ${index === 1 ? '<span class="text-danger">*</span>' : ''}</h5>
+            ${index > 1 ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.parentElement.remove()">حذف</button>` : ''}
+        </div>
+        <small class="text-danger d-block mb-2">له اسم مستخدم على المنظومة</small>
+        <div class="row g-3">
+            <div class="col-md-4"><input type="text" class="form-control emp-name" value="${data?data.name:''}" placeholder="الاسم الرباعي"></div>
+            <div class="col-md-4"><input type="text" class="form-control emp-id" value="${data?data.nationalID:''}" placeholder="الرقم القومي" maxlength="14"></div>
+            <div class="col-md-4"><input type="text" class="form-control emp-phone" value="${data?data.phone:''}" placeholder="رقم التليفون"></div>
+        </div>`;
+    container.appendChild(div);
+}
+
+// التحقق النهائي من البيانات قبل المراجعة
 function validateAndReview() {
     const emps = getEmployeeData();
     let errors = [];
 
-    emps.forEach(e => {
-        // التحقق من الحقول الإجبارية (المدير الطبي وأول مدخل بيانات)
-        if ((e.role === 'مدير طبي' || e.isFirstDataEntry) && (!e.name || !e.nationalID || !e.phone)) {
-            errors.push(`بيانات ${e.role} إجبارية بالكامل.`);
+    emps.forEach((e, idx) => {
+        const isMandatory = (e.role === 'مدير طبي' || (e.role === 'مدخل بيانات' && idx === emps.findIndex(x => x.role === 'مدخل بيانات')));
+        
+        // التحقق من الإجبارية
+        if (isMandatory && (!e.name || !e.nationalID || !e.phone)) {
+            errors.push(`بيانات "${e.role}" الأساسي إجبارية بالكامل.`);
         }
 
-        // إذا تم إدخال أي بيانات في حقل اختياري، يجب إكمال الصف
+        // التحقق من صحة المدخلات إذا تم كتابة أي شيء
         if (e.name || e.nationalID || e.phone) {
-            if (!/^[a-zA-Z\u0600-\u06FF\s]+$/.test(e.name)) errors.push(`الاسم في وظيفة ${e.role} يجب أن يكون حروفاً فقط.`);
-            if (!/^\d{14}$/.test(e.nationalID)) errors.push(`الرقم القومي في وظيفة ${e.role} يجب أن يكون 14 رقماً.`);
-            if (!/^\d+$/.test(e.phone)) errors.push(`رقم التليفون في وظيفة ${e.role} يجب أن يكون أرقاماً فقط.`);
+            if (e.name && !/^[a-zA-Z\u0600-\u06FF\s]+$/.test(e.name)) errors.push(`الاسم في "${e.role}" يجب أن يكون حروفاً فقط.`);
+            if (e.nationalID && !/^\d{14}$/.test(e.nationalID)) errors.push(`الرقم القومي في "${e.role}" يجب أن يكون 14 رقماً.`);
+            if (e.phone && !/^\d+$/.test(e.phone)) errors.push(`رقم التليفون في "${e.role}" يجب أن يكون أرقاماً فقط.`);
         }
     });
 
-    if (errors.length > 0) {
-        alert(errors.join("\n"));
-        return;
-    }
+    if (errors.length > 0) return alert("تنبيه:\n" + errors.join("\n"));
 
-    // عرض المراجعة
-    let html = '<table class="table table-bordered bg-white"><thead><tr class="table-dark"><th>الوظيفة</th><th>الاسم</th><th>الرقم القومي</th></tr></thead><tbody>';
+    // بناء جدول المراجعة
+    let html = '<table class="table table-bordered"><thead><tr class="table-dark"><th>الوظيفة</th><th>الاسم</th><th>الرقم القومي</th></tr></thead><tbody>';
     emps.filter(e => e.name).forEach(e => {
         html += `<tr><td>${e.role}</td><td>${e.name}</td><td>${e.nationalID}</td></tr>`;
     });
@@ -114,13 +141,12 @@ function validateAndReview() {
 function getEmployeeData() {
     const groups = document.querySelectorAll('.employee-group');
     let data = [];
-    groups.forEach((g, index) => {
+    groups.forEach(g => {
         data.push({
             role: g.getAttribute('data-role'),
             name: g.querySelector('.emp-name').value.trim(),
             nationalID: g.querySelector('.emp-id').value.trim(),
-            phone: g.querySelector('.emp-phone').value.trim(),
-            isFirstDataEntry: (g.getAttribute('data-role') === 'مدخل بيانات' && index === 4) // فهرس أول مدخل بيانات في النموذج
+            phone: g.querySelector('.emp-phone').value.trim()
         });
     });
     return data;
@@ -128,7 +154,7 @@ function getEmployeeData() {
 
 async function finalSubmit() {
     const btn = document.getElementById('submitBtn');
-    btn.disabled = true; btn.innerText = 'جاري الحفظ والتحديث...';
+    btn.disabled = true; btn.innerText = 'جاري الإرسال...';
 
     const payload = {
         branch: document.getElementById('branchSelect').value,
@@ -136,10 +162,12 @@ async function finalSubmit() {
         employees: getEmployeeData().filter(e => e.name !== "")
     };
 
-    const resp = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-    const result = await resp.json();
-    alert(result.message);
-    if(result.status === 'success') location.reload();
+    try {
+        const resp = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const res = await resp.json();
+        alert(res.message);
+        if(res.status === 'success') location.reload();
+    } catch (e) { alert("فشل الإرسال"); btn.disabled = false; }
 }
 
 function changeStep(n) {
