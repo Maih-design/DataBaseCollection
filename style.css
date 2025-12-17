@@ -1,0 +1,34 @@
+body {
+    background-color: #f4f7f6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.step {
+    display: none; /* إخفاء الخطوات افتراضياً */
+}
+
+.step.active {
+    display: block; /* إظهار الخطوة النشطة فقط */
+    animation: fadeIn 0.5s;
+}
+
+.instruction-box {
+    background-color: #fff3cd;
+    border-right: 5px solid #ffc107;
+    padding: 15px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+
+.employee-group {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-right: 4px solid #0d6efd;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

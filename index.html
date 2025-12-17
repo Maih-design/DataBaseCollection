@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>نظام إدارة شؤون العاملين</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container py-4">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white p-3 text-center">
+                <h3>نموذج تسجيل بيانات المراكز</h3>
+                <strong id="displayInfo"></strong>
+            </div>
+            
+            <div class="card-body p-4">
+                <div id="step1" class="step active">
+                    <label class="form-label">الفرع</label>
+                    <select id="branchSelect" class="form-select mb-3" onchange="updateCentres()"></select>
+                    <label class="form-label">المركز</label>
+                    <select id="centreSelect" class="form-select mb-4"></select>
+                    <button class="btn btn-primary w-100" onclick="validateStep1()">التالي (بيانات الموظفين)</button>
+                </div>
+
+                <div id="step2" class="step">
+                    <div class="instruction-box">
+                        <strong>تعليمات:</strong> يجب التأكد من تطابق الاسم مع بطاقة الرقم القومي، ويُمنع تكرار الموظف في أكثر من وظيفة.
+                    </div>
+
+                    <div id="employeeFields">
+                        <div class="employee-group mb-3" data-role="مدير">
+                            <h5>مدير المركز</h5>
+                            <div class="row g-2">
+                                <div class="col-md-4"><input type="text" class="form-control emp-name" placeholder="الاسم الرباعي"></div>
+                                <div class="col-md-4"><input type="number" class="form-control emp-id" placeholder="الرقم القومي"></div>
+                                <div class="col-md-4"><input type="number" class="form-control emp-phone" placeholder="رقم التليفون"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="employee-group mb-3" data-role="موظف تحصيل">
+                            <h5>موظف تحصيل</h5>
+                            <div class="row g-2">
+                                <div class="col-md-6"><input type="text" class="form-control emp-name" placeholder="الاسم الرباعي"></div>
+                                <div class="col-md-6"><input type="number" class="form-control emp-id" placeholder="الالرقم القومي"></div>
+                            </div>
+                        </div>
+
+                        <div id="dataEntryContainer"></div>
+                        <button class="btn btn-outline-success btn-sm mb-4" onclick="addDataEntryRow()">+ إضافة مدخل بيانات</button>
+                    </div>
+
+                    <div class="d-flex justify-content-between border-top pt-3">
+                        <button class="btn btn-secondary" onclick="changeStep(1)">رجوع</button>
+                        <button class="btn btn-primary" onclick="showReview()">مراجعة البيانات</button>
+                    </div>
+                </div>
+
+                <div id="step3" class="step text-center">
+                    <h4>مراجعة البيانات قبل الإرسال</h4>
+                    <div id="reviewTable" class="my-4"></div>
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-secondary" onclick="changeStep(2)">تعديل البيانات</button>
+                        <button id="submitBtn" class="btn btn-success px-5" onclick="finalSubmit()">تأكيد وإرسال</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
