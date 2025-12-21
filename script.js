@@ -1,7 +1,6 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZjzs0GpWKX8GGjX-eapfSS-56GzYAy86Y_KmnA8KAlI3MqtBVzceb3eFCqGfRf7nqrQ/exec';
+const SCRIPT_URL = 'ضع_رابط_APP_SCRIPT_هنا';
 let sourceData = [];
 
-// تحميل البيانات عند البدء
 window.onload = async () => {
     try {
         const resp = await fetch(`${SCRIPT_URL}?action=get_source`);
@@ -10,7 +9,7 @@ window.onload = async () => {
         const bSelect = document.getElementById('branchSelect');
         bSelect.innerHTML = '<option value="">اختر الفرع...</option>';
         branches.forEach(b => bSelect.innerHTML += `<option value="${b}">${b}</option>`);
-    } catch (e) { console.error(e); }
+    } catch (e) { alert("خطأ في جلب بيانات الفروع"); }
 };
 
 function updateCentres() {
@@ -39,14 +38,13 @@ async function validateStep1() {
         if (confirm('بيانات المركز مسجلة مسبقاً. هل تود تحميلها لتعديلها؟')) {
             fillFormWithData(result.employees);
         } else {
-            addDoctorRow(); // يظهر الطبيب الأول دائماً حتى لو كان اختيارياً
+            addDoctorRow(); 
             addDataEntryRow(); 
         }
     } else {
-        addDoctorRow(); // طبيب واحد ظاهر دائماً
-        addDataEntryRow(); // مدخل بيانات إجباري
+        addDoctorRow(); 
+        addDataEntryRow(); 
     }
-    
     changeStep(2);
 }
 
@@ -65,7 +63,6 @@ function fillFormWithData(employees) {
             }
         }
     });
-    // ضمان وجود طبيب واحد ومدخل بيانات واحد كحد أدنى للعرض
     if (document.getElementById('doctorContainer').children.length === 0) addDoctorRow();
     if (document.getElementById('dataEntryContainer').children.length === 0) addDataEntryRow();
 }
@@ -74,15 +71,15 @@ function addDoctorRow(data = null) {
     const container = document.getElementById('doctorContainer');
     const index = container.children.length + 1;
     const div = document.createElement('div');
-    div.className = 'employee-group border rounded p-3 mb-4 border-info';
+    div.className = 'employee-group border rounded p-3 mb-4';
     div.setAttribute('data-role', 'طبيب مراجع فني');
     div.innerHTML = `
         <div class="d-flex justify-content-between">
-            <h5 class="text-info">طبيب - مراجع فني (${index})</h5>
+            <h5 class="text-info fw-bold">طبيب - مراجع فني (${index})</h5>
             ${index > 1 ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.parentElement.remove()">حذف</button>` : ''}
         </div>
         <div class="row g-3 mt-1">
-            <div class="col-md-4"><input type="text" class="form-control emp-name" value="${data?data.name:''}" placeholder="الاسم الرباعي (اختياري)"></div>
+            <div class="col-md-4"><input type="text" class="form-control emp-name" value="${data?data.name:''}" placeholder="الاسم الرباعي"></div>
             <div class="col-md-4"><input type="text" class="form-control emp-id" value="${data?data.nationalID:''}" placeholder="الرقم القومي" maxlength="14"></div>
             <div class="col-md-4"><input type="text" class="form-control emp-phone" value="${data?data.phone:''}" placeholder="رقم التليفون"></div>
         </div>`;
@@ -93,11 +90,11 @@ function addDataEntryRow(data = null) {
     const container = document.getElementById('dataEntryContainer');
     const index = container.children.length + 1;
     const div = document.createElement('div');
-    div.className = 'employee-group border rounded p-3 mb-4 border-success';
+    div.className = 'employee-group border rounded p-3 mb-4';
     div.setAttribute('data-role', 'مدخل بيانات');
     div.innerHTML = `
         <div class="d-flex justify-content-between">
-            <h5 class="text-success">مدخل بيانات (${index}) ${index === 1 ? '<span class="text-danger">*</span>' : ''}</h5>
+            <h5 class="text-success fw-bold">مدخل بيانات (${index}) ${index === 1 ? '<span class="text-danger">*</span>' : ''}</h5>
             ${index > 1 ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.parentElement.remove()">حذف</button>` : ''}
         </div>
         <small class="text-danger d-block mb-2">له اسم مستخدم على المنظومة</small>
@@ -129,7 +126,7 @@ function validateAndReview() {
 
     if (errors.length > 0) return alert("تنبيه:\n" + errors.join("\n"));
 
-    let html = '<table class="table table-bordered"><thead><tr class="table-dark"><th>الوظيفة</th><th>الاسم</th><th>الرقم القومي</th></tr></thead><tbody>';
+    let html = '<table class="table table-striped table-bordered"><thead><tr class="table-dark"><th>الوظيفة</th><th>الاسم</th><th>الرقم القومي</th></tr></thead><tbody>';
     emps.filter(e => e.name).forEach(e => {
         html += `<tr><td>${e.role}</td><td>${e.name}</td><td>${e.nationalID}</td></tr>`;
     });
@@ -154,7 +151,7 @@ function getEmployeeData() {
 
 async function finalSubmit() {
     const btn = document.getElementById('submitBtn');
-    btn.disabled = true; btn.innerText = 'جاري الإرسال...';
+    btn.disabled = true; btn.innerText = 'جاري الحفظ...';
 
     const payload = {
         branch: document.getElementById('branchSelect').value,
