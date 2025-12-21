@@ -13,10 +13,22 @@
     <div class="card shadow border-0">
         <div class="card-header bg-info text-white text-center py-3">
             <h3 class="mb-0">تسجيل بيانات القوى البشرية</h3>
-            <div id="displayLocation" class="h2 fw-bold mt-3 bg-light text-primary"></div>
+            <div id="displayLocation" class="h2 fw-bold mt-3 bg-light text-primary p-2 rounded"></div>
         </div>
+        
         <div class="card-body p-4">
 
+            <div class="alert alert-warning shadow-sm border-2 border-warning mb-4">
+                <h5 class="alert-heading fw-bold">⚠️ تعليمات هامة للإدخال:</h5>
+                <hr>
+                <ul class="mb-0 fw-medium">
+                    <li>يرجى إدخال الاسم الرباعي بشكل صحيح كما هو في البطاقة.</li>
+                    <li>الرقم القومي يجب أن يتكون من 14 رقماً.</li>
+                    <li>رقم التليفون يجب أن يتكون من 11 رقماً.</li>
+                    <li>خانة "المدير الطبي" وخانة "مدخل بيانات (1)" بيانات إجبارية.</li>
+                    <li>في حالة وجود أكثر من "طبيب مراجع" أو "مدخل بيانات"، يرجى استخدام أزرار الإضافة.</li>
+                    </ul>
+            </div>
             <div id="step1" class="step active">
                 <div class="mb-3">
                     <label class="form-label fw-bold">الفرع</label>
@@ -33,7 +45,7 @@
                 <form id="mainForm">
                     
                     <div class="employee-group border-primary border rounded p-3 mb-4" data-role="مدير طبي">
-                        <h5 class="text-primary">المدير الطبي <span class="text-danger">*</span></h5>
+                        <h5 class="text-primary fw-bold">المدير الطبي <span class="text-danger">*</span></h5>
                         <small class="text-danger d-block mb-2">في حالة عدم وجود مدير طبي برجاء ادخال بيانات مدير العيادة</small>
                         <div class="row g-3">
                             <div class="col-md-4"><input type="text" class="form-control emp-name" placeholder="الاسم الرباعي" required></div>
@@ -42,12 +54,11 @@
                         </div>
                     </div>
 
-                    <div id="doctorContainer">
-                        </div>
+                    <div id="doctorContainer"></div>
                     <button type="button" class="btn btn-outline-info btn-sm mb-4" onclick="addDoctorRow()">+ إضافة طبيب - مراجع فني آخر</button>
 
                     <div class="employee-group border rounded p-3 mb-4" data-role="مدير إداري">
-                        <h5 class="text-secondary">المدير الإداري</h5>
+                        <h5 class="text-secondary fw-bold">المدير الإداري</h5>
                         <div class="row g-3">
                             <div class="col-md-4"><input type="text" class="form-control emp-name" placeholder="الاسم"></div>
                             <div class="col-md-4"><input type="text" class="form-control emp-id" placeholder="الرقم القومي" maxlength="14"></div>
@@ -56,7 +67,7 @@
                     </div>
 
                     <div class="employee-group border rounded p-3 mb-4" data-role="موظف تحصيل">
-                        <h5 class="text-secondary">موظف تحصيل</h5>
+                        <h5 class="text-secondary fw-bold">موظف تحصيل</h5>
                         <div class="row g-3">
                             <div class="col-md-4"><input type="text" class="form-control emp-name" placeholder="الاسم"></div>
                             <div class="col-md-4"><input type="text" class="form-control emp-id" placeholder="الرقم القومي" maxlength="14"></div>
