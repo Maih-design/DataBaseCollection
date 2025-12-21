@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'ضع_رابط_APP_SCRIPT_هنا';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZjzs0GpWKX8GGjX-eapfSS-56GzYAy86Y_KmnA8KAlI3MqtBVzceb3eFCqGfRf7nqrQ/exec';
 let sourceData = [];
 
 window.onload = async () => {
