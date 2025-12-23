@@ -80,7 +80,7 @@ function addDoctorRow(data = null) {
         </div>
         <div class="row g-3 mt-1">
             <div class="col-md-4"><input type="text" class="form-control emp-name" value="${data?data.name:''}" placeholder="الاسم الرباعي"></div>
-            <div class="col-md-4"><input type="text" class="form-control emp-id" value="${data?data.nationalID:''}" placeholder="الرقم القومي" maxlength="14"></div>
+            <div class="col-md-4"><input type="text" class="form-control emp-id" placeholder="الرقم القومي" maxlength="14" minlength="14" pattern="\d{14}"></div>
             <div class="col-md-4"><input type="text" class="form-control emp-phone" value="${data?data.phone:''}" placeholder="رقم التليفون"></div>
         </div>`;
     container.appendChild(div);
@@ -100,7 +100,7 @@ function addDataEntryRow(data = null) {
         <small class="text-danger d-block mb-2">له اسم مستخدم على المنظومة</small>
         <div class="row g-3">
             <div class="col-md-4"><input type="text" class="form-control emp-name" value="${data?data.name:''}" placeholder="الاسم الرباعي"></div>
-            <div class="col-md-4"><input type="text" class="form-control emp-id" value="${data?data.nationalID:''}" placeholder="الرقم القومي" maxlength="14"></div>
+            <div class="col-md-4"><input type="text" class="form-control emp-id" placeholder="الرقم القومي" maxlength="14" minlength="14" pattern="\d{14}"></div>
             <div class="col-md-4"><input type="text" class="form-control emp-phone" value="${data?data.phone:''}" placeholder="رقم التليفون"></div>
         </div>`;
     container.appendChild(div);
